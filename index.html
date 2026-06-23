@@ -188,22 +188,32 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredPrompt = e;
 });
 
+// INSTALL SYSTEM
+let deferredPrompt;
+
+const installBtn = document.querySelector('[onclick="installApp()"]');
+
+// Button erstmal verstecken
+if (installBtn) installBtn.style.display = "none";
+
+// Wenn Install erlaubt ist → Button anzeigen
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  if (installBtn) installBtn.style.display = "inline-block";
+});
+
 function installApp(){
   if(deferredPrompt){
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(()=>{
       deferredPrompt = null;
     });
-  } else {
-    alert('Installieren gerade nicht verfügbar');
   }
 }
 
-// ✅ Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(() => console.log('Service Worker registriert'));
-}
+
 
    
 </script>
