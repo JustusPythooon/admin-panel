@@ -180,6 +180,7 @@ const c=document.getElementById('bg');const ctx=c.getContext('2d');c.width=inner
 
 
 window.onload=()=>{renderNotes();renderEvents();renderFiles()}
+
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -196,7 +197,15 @@ function installApp(){
   } else {
     alert('Installieren gerade nicht verfügbar');
   }
-} 
+}
+
+// ✅ Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('Service Worker registriert'));
+}
+
+   
 </script>
 
 
