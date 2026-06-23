@@ -183,6 +183,23 @@ const c=document.getElementById('bg');const ctx=c.getContext('2d');c.width=inner
 
 
 window.onload=()=>{renderNotes();renderEvents();renderFiles()}
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+});
+
+function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{
+      deferredPrompt = null;
+    });
+  } else {
+    alert('Installieren gerade nicht verfügbar');
+  }
+} 
 </script>
 
 
