@@ -1,0 +1,181 @@
+
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 Admin Pythoooo0 Panel</title>
+<link rel="manifest" href="manifest.json">
+
+
+
+
+<style>
+body{margin:0;font-family:Arial;background:#050816;color:#00f7ff}
+canvas{position:fixed;top:0;left:0;z-index:-1}
+
+/* LOGIN */
+#loginScreen{height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#020617,#1e293b);} 
+.login-box{background:rgba(255,255,255,0.05);backdrop-filter:blur(15px);padding:30px;border-radius:20px;width:300px;text-align:center;box-shadow:0 0 30px #00f7ff55;}
+.login-box input{width:100%;padding:10px;margin:10px 0;border:none;border-radius:10px}
+.login-box button{width:100%;padding:10px;border:none;border-radius:10px;background:#00f7ff;color:black}
+#error{color:red}
+/* APP */
+header{text-align:center;padding:10px;background:#0f172a}
+nav{display:flex;background:#111827}
+nav button{flex:1;padding:10px;border:none;background:none;color:white;cursor:pointer}
+nav button:hover{background:#1f2937}
+section{display:none;padding:10px;height:calc(100vh - 100px);overflow:auto}
+.active{display:block}
+.card{background:#0f172a;padding:10px;border-radius:10px;margin-bottom:10px}
+
+
+/* NOTES */
+.notes{display:flex;height:250px}
+.notes-list{width:30%;background:#111;padding:5px;overflow:auto}
+.notes-list div{padding:5px;background:#222;margin-bottom:5px;cursor:pointer}
+.editor{flex:1;padding:5px}
+
+
+/* EDITOR */
+.tabs{display:flex}
+.tabs button{flex:1;padding:8px;background:#111827;border:none;color:#ccc}
+.tabs button.activeTab{background:#1e293b;color:#fff}
+textarea{width:100%;height:150px;background:#020617;color:#00f7ff;border:none;padding:10px;font-family:monospace}
+iframe{width:100%;height:200px;background:white}
+
+
+.viewer{position:fixed;top:0;left:0;width:100%;height:100%;background:black;display:none}
+.viewer iframe{width:100%;height:100%}
+</style>
+</head>
+
+<body>
+<canvas id="bg"></canvas>
+
+
+<!-- LOGIN -->
+<div id="loginScreen">
+ <div class="login-box">
+  <h2>🔐 GOD OS</h2>
+  <input id="pw" type="password" placeholder="Passwort">
+  <button onclick="login()">Login</button>
+  <p id="error"></p>
+ </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+<header>🔥 Admin Pythoooo0 Panel</header>
+<nav>
+<button onclick="show('dash')">Dashboard</button>
+<button onclick="show('notes')">Notizen</button>
+<button onclick="show('cal')">Kalender</button>
+<button onclick="show('apps')">Apps</button>
+<button onclick="show('editor')">VS Code</button>
+<button onclick="show('auth')">Auth</button>
+</nav>
+
+<section id="dash" class="active"><div class="card">Zeit: <span id="time"></span></div></section>
+<!-- NOTES -->
+<section id="notes"><div class="card"><div class="notes">
+<div id="notesList" class="notes-list"></div>
+<div class="editor">
+<input id="noteTitle" placeholder="Titel">
+<textarea id="noteContent"></textarea>
+<button onclick="saveNote()">💾</button>
+<button onclick="newNote()">➕</button>
+</div></div></div></section>
+
+
+<!-- CALENDAR -->
+<section id="cal"><div class="card">
+<input type="date" id="date">
+<input id="eventText" placeholder="Termin">
+<button onclick="addEvent()">Speichern</button>
+<ul id="events"></ul>
+</div></section>
+
+
+<!-- APPS -->
+<section id="apps"><div class="card">
+<input type="file" id="fileInput">
+<div id="fileList"></div>
+</div></section>
+
+
+<!-- VS CODE -->
+<section id="editor"><div class="card">
+<div class="tabs">
+<button id="tab-html" class="activeTab" onclick="switchTab('html')">HTML</button>
+<button id="tab-css" onclick="switchTab('css')">CSS</button>
+<button id="tab-js" onclick="switchTab('js')">JS</button>
+</div>
+<textarea id="htmlCode"><h1>Hello</h1></textarea>
+<textarea id="cssCode" style="display:none">body{color:red}</textarea>
+<textarea id="jsCode" style="display:none">console.log('hi')</textarea>
+<button onclick="runCode()">▶</button>
+<iframe id="preview"></iframe>
+</div></section>
+<!-- AUTH -->
+<section id="auth"><div class="card">
+<input id="secret" placeholder="Base32 Secret">
+<h2 id="code">------</h2>
+<p id="timer"></p>
+<button onclick="startTOTP()">Start</button>
+</div></section>
+</div>
+
+<div id="viewer" class="viewer"><iframe id="viewFrame"></iframe></div>
+
+<script>
+// LOGIN
+function login(){if(pw.value==="admin123!"){loginScreen.style.display='none';app.style.display='block'}else error.innerText='❌ falsch'}
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+setInterval(()=>time.innerText=new Date().toLocaleTimeString(),1000)
+
+// NOTES
+let notes=JSON.parse(localStorage.getItem('notes')||"[]"),idx=null
+function renderNotes(){notesList.innerHTML="";notes.forEach((n,i)=>{let d=document.createElement('div');d.textContent=n.t;d.onclick=()=>{idx=i;noteTitle.value=n.t;noteContent.value=n.c};notesList.appendChild(d)})}
+function saveNote(){if(idx!=null)notes[idx]={t:noteTitle.value,c:noteContent.value};else notes.push({t:noteTitle.value,c:noteContent.value});localStorage.setItem('notes',JSON.stringify(notes));renderNotes()}
+function newNote(){idx=null;noteTitle.value="";noteContent.value=""}
+
+
+// CALENDAR
+let eventsArr=JSON.parse(localStorage.getItem('events')||"[]")
+function addEvent(){eventsArr.push({d:date.value,t:eventText.value});localStorage.setItem('events',JSON.stringify(eventsArr));renderEvents()}
+function renderEvents(){events.innerHTML="";eventsArr.forEach((e,i)=>{let li=document.createElement('li');li.textContent=e.d+" "+e.t;li.onclick=()=>{eventsArr.splice(i,1);localStorage.setItem('events',JSON.stringify(eventsArr));renderEvents()};events.appendChild(li)})}
+
+
+// APPS
+let files=JSON.parse(localStorage.getItem('files')||"[]")
+fileInput.onchange=e=>{let f=e.target.files[0];let r=new FileReader();r.onload=()=>{files.push({n:f.name,c:r.result});localStorage.setItem('files',JSON.stringify(files));renderFiles()};r.readAsDataURL(f)}
+function renderFiles(){fileList.innerHTML="";files.forEach(f=>{let d=document.createElement('div');d.textContent=f.n;d.onclick=()=>{viewFrame.src=f.c;viewer.style.display='block'};fileList.appendChild(d)})}
+viewer.onclick=()=>viewer.style.display='none'
+
+
+// VS CODE
+function switchTab(tab){
+ htmlCode.style.display=tab==='html'?'block':'none'
+ cssCode.style.display=tab==='css'?'block':'none'
+ jsCode.style.display=tab==='js'?'block':'none'
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('activeTab'))
+ document.getElementById('tab-'+tab).classList.add('activeTab')
+}
+function runCode(){preview.srcdoc=`<style>${cssCode.value}</style>`+htmlCode.value+`<script>${jsCode.value}<\/script>`}
+// AUTH
+function base32Decode(input){const c="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";let bits="";input=input.replace(/=/g,"");for(let i=0;i<input.length;i++){bits+=c.indexOf(input[i].toUpperCase()).toString(2).padStart(5,'0')}let b=[];for(let i=0;i+8<=bits.length;i+=8){b.push(parseInt(bits.substr(i,8),2))}return new Uint8Array(b)}
+async function totp(sec){const key=await crypto.subtle.importKey("raw",base32Decode(sec),{name:"HMAC",hash:"SHA-1"},false,["sign"]);let t=Math.floor(Date.now()/30000);let buf=new ArrayBuffer(8);new DataView(buf).setUint32(4,t);let h=new Uint8Array(await crypto.subtle.sign("HMAC",key,buf));let o=h[h.length-1]&0xf;let code=(h[o]&0x7f)<<24|(h[o+1]&0xff)<<16|(h[o+2]&0xff)<<8|(h[o+3]&0xff);return(code%1000000).toString().padStart(6,'0')}
+function startTOTP(){setInterval(async()=>{if(secret.value){code.innerText=await totp(secret.value);timer.innerText=(30-Math.floor(Date.now()/1000)%30)+'s'}},1000)}
+
+
+// PARTICLES
+const c=document.getElementById('bg');const ctx=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;let p=[];for(let i=0;i<80;i++)p.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:Math.random()-0.5,vy:Math.random()-0.5});function draw(){ctx.clearRect(0,0,c.width,c.height);p.forEach(e=>{e.x+=e.vx;e.y+=e.vy;ctx.fillStyle='#00f7ff';ctx.fillRect(e.x,e.y,2,2)});requestAnimationFrame(draw)}draw();
+
+
+window.onload=()=>{renderNotes();renderEvents();renderFiles()}
+</script>
+
+
+</body>
